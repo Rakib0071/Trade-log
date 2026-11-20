@@ -1,0 +1,6 @@
+{
+  "name": "EdgeLog",
+  "description": "Trading journal and performance analytics app for logging trades, tracking P&L metrics, calendar heatmaps, setup playbooks, and historical data analysis.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

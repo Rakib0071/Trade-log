@@ -1,0 +1,70 @@
+<resources>
+    <string name="app_name">EdgeLog</string>
+
+    <!-- Navigation -->
+    <string name="nav_dashboard">Dashboard</string>
+    <string name="nav_calendar">Journal</string>
+    <string name="nav_trades">Trades</string>
+    <string name="nav_analytics">Analytics</string>
+    <string name="nav_playbooks">Playbooks</string>
+
+    <!-- Actions -->
+    <string name="action_log_trade">Log Trade</string>
+    <string name="action_import_csv">Import CSV</string>
+    <string name="action_export_csv">Export CSV</string>
+    <string name="action_load_demo">Load Demo History</string>
+    <string name="action_clear_demo">Remove Demo Data</string>
+    <string name="action_save">Save</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_edit">Edit</string>
+    <string name="action_back">Back</string>
+    <string name="action_accounts_tools">Accounts &amp; Tools</string>
+    <string name="action_add_playbook">New Playbook</string>
+    <string name="action_add_account">Add Account</string>
+    <string name="action_attach_chart">Attach Chart Screenshot</string>
+    <string name="action_replace_chart">Replace Chart</string>
+    <string name="action_remove_chart">Remove Chart</string>
+
+    <!-- Dashboard & Metrics -->
+    <string name="metric_net_pnl">Net P&amp;L</string>
+    <string name="metric_account_equity">Account Equity</string>
+    <string name="metric_win_rate">Trade Win %</string>
+    <string name="metric_profit_factor">Profit Factor</string>
+    <string name="metric_day_win_rate">Day Win %</string>
+    <string name="metric_avg_win_loss">Avg Win / Loss</string>
+    <string name="metric_expectancy">Expectancy</string>
+    <string name="metric_net_r">Net R-Multiple</string>
+    <string name="metric_max_drawdown">Max Drawdown</string>
+    <string name="metric_edge_score">Edge Score</string>
+    <string name="metric_equity_curve">Cumulative P&amp;L</string>
+    <string name="metric_daily_pnl">Daily Net P&amp;L</string>
+    <string name="metric_recent_trades">Recent Executions</string>
+
+    <!-- Empty States -->
+    <string name="empty_dashboard_title">Your Trading Edge Starts Here</string>
+    <string name="empty_dashboard_subtitle">Log executions manually, import historical broker CSV files, or load a sample multi-asset journal to explore performance analytics.</string>
+    <string name="empty_trades_title">No Matching Trades</string>
+    <string name="empty_trades_subtitle">Adjust your filters or log a new execution to build your performance ledger.</string>
+    <string name="empty_playbooks_title">Codify Your Trading Edge</string>
+    <string name="empty_playbooks_subtitle">Define setup criteria, checklists, and target R:R so you can measure rule adherence and expectancy per strategy.</string>
+
+    <!-- Content Descriptions -->
+    <string name="cd_hero_banner">Quantitative equity curve and candlestick visual banner</string>
+    <string name="cd_accounts_settings">Open Google account sync, trading accounts, backups, and display settings</string>
+    <string name="cd_log_trade_fab">Log a new trade</string>
+    <string name="cd_prev_month">Previous month</string>
+    <string name="cd_next_month">Next month</string>
+    <string name="cd_trade_chart">Attached trade chart screenshot</string>
+    <string name="cd_clear_search">Clear search query</string>
+
+    <!-- Google Account & Cloud Sync -->
+    <string name="auth_title">EdgeLog Cloud Terminal</string>
+    <string name="auth_subtitle">Connect your Google Account to keep your trades, playbooks, and daily reviews backed up across reinstalls, data clears, and devices.</string>
+    <string name="auth_sign_in_google">Sign in with Google</string>
+    <string name="auth_signing_in">Connecting to Google…</string>
+    <string name="auth_sign_out">Sign Out</string>
+    <string name="cloud_sync_active">Auto-synced to Google Account</string>
+    <string name="action_backup_json">Backup to Drive / Files</string>
+    <string name="action_restore_json">Restore Backup</string>
+</resources>

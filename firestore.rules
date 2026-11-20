@@ -1,0 +1,219 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Reusable zero-trust primitives
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isBoundedStringList(arr, maxLen) {
+      return arr is list && arr.size() <= maxLen && (arr.size() == 0 || arr[0] is string);
+    }
+
+    function isValidAccount(data, userId) {
+      return data.userId == userId &&
+        data.name is string && data.name.size() >= 1 && data.name.size() <= 60 &&
+        data.broker is string && data.broker.size() <= 60 &&
+        data.startingBalance is number && data.startingBalance >= 0 && data.startingBalance <= 1000000000 &&
+        data.currency is string && data.currency.size() >= 1 && data.currency.size() <= 8;
+    }
+
+    function isValidPlaybook(data, userId) {
+      return data.userId == userId &&
+        data.name is string && data.name.size() >= 1 && data.name.size() <= 80 &&
+        data.description is string && data.description.size() <= 500 &&
+        data.marketCondition is string && data.marketCondition.size() <= 60 &&
+        isBoundedStringList(data.rules, 20) &&
+        data.targetRiskReward is number && data.targetRiskReward >= 0.1 && data.targetRiskReward <= 100 &&
+        data.colorHex is int &&
+        data.demoRecord is bool;
+    }
+
+    function isValidTrade(data, userId) {
+      return data.userId == userId &&
+        isValidId(data.accountId) &&
+        data.symbol is string && data.symbol.size() >= 1 && data.symbol.size() <= 24 &&
+        data.assetClass in ['STOCK', 'OPTIONS', 'FUTURES', 'FOREX', 'CRYPTO'] &&
+        data.side in ['LONG', 'SHORT'] &&
+        data.status in ['CLOSED', 'OPEN'] &&
+        data.entryPrice is number && data.entryPrice > 0 &&
+        (!('exitPrice' in data) || data.exitPrice == null || (data.exitPrice is number && data.exitPrice > 0)) &&
+        data.quantity is number && data.quantity > 0 &&
+        data.contractMultiplier is number && data.contractMultiplier > 0 &&
+        data.fees is number && data.fees >= 0 &&
+        (!('stopLossPrice' in data) || data.stopLossPrice == null || (data.stopLossPrice is number && data.stopLossPrice > 0)) &&
+        (!('takeProfitPrice' in data) || data.takeProfitPrice == null || (data.takeProfitPrice is number && data.takeProfitPrice > 0)) &&
+        data.entryTimeEpochMs is int && data.entryTimeEpochMs > 0 &&
+        (!('exitTimeEpochMs' in data) || data.exitTimeEpochMs == null || (data.exitTimeEpochMs is int && data.exitTimeEpochMs > 0)) &&
+        (!('playbookId' in data) || data.playbookId == null || isValidId(data.playbookId)) &&
+        data.playbookAdherencePct is int && data.playbookAdherencePct >= 0 && data.playbookAdherencePct <= 100 &&
+        isBoundedStringList(data.checkedRules, 20) &&
+        isBoundedStringList(data.mistakeTags, 15) &&
+        isBoundedStringList(data.setupTags, 15) &&
+        data.emotionBefore is string && data.emotionBefore.size() >= 1 && data.emotionBefore.size() <= 32 &&
+        data.rating is int && data.rating >= 1 && data.rating <= 5 &&
+        data.notes is string && data.notes.size() <= 3000 &&
+        (!('chartImagePath' in data) || data.chartImagePath == null || (data.chartImagePath is string && data.chartImagePath.size() <= 500)) &&
+        data.demoRecord is bool;
+    }
+
+    function isValidDailyJournal(data, userId) {
+      return data.userId == userId &&
+        isValidId(data.accountId) &&
+        data.dateIso is string && data.dateIso.size() == 10 && data.dateIso.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$') &&
+        data.preMarketPlan is string && data.preMarketPlan.size() <= 2000 &&
+        data.postMarketReview is string && data.postMarketReview.size() <= 2000 &&
+        data.lessonsLearned is string && data.lessonsLearned.size() <= 2000 &&
+        data.mood is string && data.mood.size() >= 1 && data.mood.size() <= 32 &&
+        data.marketRegime is string && data.marketRegime.size() >= 1 && data.marketRegime.size() <= 32 &&
+        data.followedPlan is bool &&
+        data.demoRecord is bool;
+    }
+
+    match /users/{userId}/accounts/{accountId} {
+      allow get: if isOwner(userId) && isValidId(accountId);
+      allow list: if isOwner(userId);
+
+      allow create: if isOwner(userId) &&
+        isValidId(accountId) &&
+        incoming().keys().hasAll(['userId', 'name', 'broker', 'startingBalance', 'currency', 'createdAt', 'updatedAt']) &&
+        incoming().keys().hasOnly(['userId', 'name', 'broker', 'startingBalance', 'currency', 'createdAt', 'updatedAt']) &&
+        incoming().createdAt is timestamp && incoming().createdAt <= request.time &&
+        incoming().updatedAt is timestamp && incoming().updatedAt <= request.time &&
+        isValidAccount(incoming(), userId);
+
+      allow update: if isOwner(userId) &&
+        isValidId(accountId) &&
+        isValidAccount(incoming(), userId) &&
+        incoming().userId == existing().userId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt is timestamp && incoming().updatedAt <= request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['name', 'broker', 'startingBalance', 'currency', 'updatedAt']);
+
+      allow delete: if isOwner(userId) && isValidId(accountId);
+    }
+
+    match /users/{userId}/playbooks/{playbookId} {
+      allow get: if isOwner(userId) && isValidId(playbookId);
+      allow list: if isOwner(userId);
+
+      allow create: if isOwner(userId) &&
+        isValidId(playbookId) &&
+        incoming().keys().hasAll(['userId', 'name', 'description', 'marketCondition', 'rules', 'targetRiskReward', 'colorHex', 'demoRecord', 'createdAt', 'updatedAt']) &&
+        incoming().keys().hasOnly(['userId', 'name', 'description', 'marketCondition', 'rules', 'targetRiskReward', 'colorHex', 'demoRecord', 'createdAt', 'updatedAt']) &&
+        incoming().createdAt is timestamp && incoming().createdAt <= request.time &&
+        incoming().updatedAt is timestamp && incoming().updatedAt <= request.time &&
+        isValidPlaybook(incoming(), userId);
+
+      allow update: if isOwner(userId) &&
+        isValidId(playbookId) &&
+        isValidPlaybook(incoming(), userId) &&
+        incoming().userId == existing().userId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt is timestamp && incoming().updatedAt <= request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'name', 'description', 'marketCondition', 'rules', 'targetRiskReward', 'colorHex', 'demoRecord', 'updatedAt'
+        ]);
+
+      allow delete: if isOwner(userId) && isValidId(playbookId);
+    }
+
+    match /users/{userId}/trades/{tradeId} {
+      allow get: if isOwner(userId) && isValidId(tradeId);
+      allow list: if isOwner(userId);
+
+      allow create: if isOwner(userId) &&
+        isValidId(tradeId) &&
+        incoming().keys().hasAll([
+          'userId', 'accountId', 'symbol', 'assetClass', 'side', 'status',
+          'entryPrice', 'quantity', 'contractMultiplier', 'fees', 'entryTimeEpochMs',
+          'playbookAdherencePct', 'checkedRules', 'mistakeTags', 'setupTags',
+          'emotionBefore', 'rating', 'notes', 'demoRecord', 'createdAt', 'updatedAt'
+        ]) &&
+        incoming().keys().hasOnly([
+          'userId', 'accountId', 'symbol', 'assetClass', 'side', 'status',
+          'entryPrice', 'exitPrice', 'quantity', 'contractMultiplier', 'fees',
+          'stopLossPrice', 'takeProfitPrice', 'entryTimeEpochMs', 'exitTimeEpochMs',
+          'playbookId', 'playbookAdherencePct', 'checkedRules', 'mistakeTags', 'setupTags',
+          'emotionBefore', 'rating', 'notes', 'chartImagePath', 'demoRecord', 'createdAt', 'updatedAt'
+        ]) &&
+        incoming().createdAt is timestamp && incoming().createdAt <= request.time &&
+        incoming().updatedAt is timestamp && incoming().updatedAt <= request.time &&
+        isValidTrade(incoming(), userId) &&
+        existsAfter(/databases/$(database)/documents/users/$(userId)/accounts/$(incoming().accountId));
+
+      allow update: if isOwner(userId) &&
+        isValidId(tradeId) &&
+        isValidTrade(incoming(), userId) &&
+        incoming().userId == existing().userId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt is timestamp && incoming().updatedAt <= request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'accountId', 'symbol', 'assetClass', 'side', 'status',
+          'entryPrice', 'exitPrice', 'quantity', 'contractMultiplier', 'fees',
+          'stopLossPrice', 'takeProfitPrice', 'entryTimeEpochMs', 'exitTimeEpochMs',
+          'playbookId', 'playbookAdherencePct', 'checkedRules', 'mistakeTags', 'setupTags',
+          'emotionBefore', 'rating', 'notes', 'chartImagePath', 'demoRecord', 'updatedAt'
+        ]);
+
+      allow delete: if isOwner(userId) && isValidId(tradeId);
+    }
+
+    match /users/{userId}/journals/{journalId} {
+      allow get: if isOwner(userId) && isValidId(journalId);
+      allow list: if isOwner(userId);
+
+      allow create: if isOwner(userId) &&
+        isValidId(journalId) &&
+        incoming().keys().hasAll([
+          'userId', 'accountId', 'dateIso', 'preMarketPlan', 'postMarketReview',
+          'lessonsLearned', 'mood', 'marketRegime', 'followedPlan', 'demoRecord',
+          'createdAt', 'updatedAt'
+        ]) &&
+        incoming().keys().hasOnly([
+          'userId', 'accountId', 'dateIso', 'preMarketPlan', 'postMarketReview',
+          'lessonsLearned', 'mood', 'marketRegime', 'followedPlan', 'demoRecord',
+          'createdAt', 'updatedAt'
+        ]) &&
+        incoming().createdAt is timestamp && incoming().createdAt <= request.time &&
+        incoming().updatedAt is timestamp && incoming().updatedAt <= request.time &&
+        isValidDailyJournal(incoming(), userId) &&
+        existsAfter(/databases/$(database)/documents/users/$(userId)/accounts/$(incoming().accountId));
+
+      allow update: if isOwner(userId) &&
+        isValidId(journalId) &&
+        isValidDailyJournal(incoming(), userId) &&
+        incoming().userId == existing().userId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt is timestamp && incoming().updatedAt <= request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'preMarketPlan', 'postMarketReview', 'lessonsLearned', 'mood',
+          'marketRegime', 'followedPlan', 'demoRecord', 'updatedAt'
+        ]);
+
+      allow delete: if isOwner(userId) && isValidId(journalId);
+    }
+  }
+}

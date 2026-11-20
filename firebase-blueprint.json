@@ -1,0 +1,295 @@
+{
+  "entities": {
+    "TradingAccount": {
+      "title": "TradingAccount",
+      "description": "A user's brokerage or prop-firm trading portfolio container.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Owner Firebase Auth UID."
+        },
+        "name": {
+          "type": "string",
+          "description": "Display name of the trading account."
+        },
+        "broker": {
+          "type": "string",
+          "description": "Brokerage or prop firm name."
+        },
+        "startingBalance": {
+          "type": "number",
+          "description": "Initial capital balance for equity curve and drawdown calculations."
+        },
+        "currency": {
+          "type": "string",
+          "description": "ISO currency code (e.g., USD)."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp written via FieldValue.serverTimestamp()."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp written via FieldValue.serverTimestamp()."
+        }
+      },
+      "required": ["userId", "name", "broker", "startingBalance", "currency", "createdAt", "updatedAt"]
+    },
+    "Playbook": {
+      "title": "Playbook",
+      "description": "A codified trading strategy setup with entry rules and target risk-to-reward ratio.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Owner Firebase Auth UID."
+        },
+        "name": {
+          "type": "string",
+          "description": "Strategy playbook title."
+        },
+        "description": {
+          "type": "string",
+          "description": "Strategy edge hypothesis and description."
+        },
+        "marketCondition": {
+          "type": "string",
+          "description": "Ideal market regime for the setup."
+        },
+        "rules": {
+          "type": "array",
+          "description": "Bounded checklist of up to 20 setup rules."
+        },
+        "targetRiskReward": {
+          "type": "number",
+          "description": "Target R-multiple payoff ratio."
+        },
+        "colorHex": {
+          "type": "integer",
+          "description": "ARGB swatch color integer for visual tagging."
+        },
+        "demoRecord": {
+          "type": "boolean",
+          "description": "True if created by the opt-in demo history loader."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp written via FieldValue.serverTimestamp()."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp written via FieldValue.serverTimestamp()."
+        }
+      },
+      "required": ["userId", "name", "description", "marketCondition", "rules", "targetRiskReward", "colorHex", "demoRecord", "createdAt", "updatedAt"]
+    },
+    "Trade": {
+      "title": "Trade",
+      "description": "An individual logged market execution with pricing, risk, psychology, and playbook compliance.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Owner Firebase Auth UID."
+        },
+        "accountId": {
+          "type": "string",
+          "description": "Document ID of the parent TradingAccount."
+        },
+        "symbol": {
+          "type": "string",
+          "description": "Uppercase ticker or instrument symbol."
+        },
+        "assetClass": {
+          "type": "string",
+          "enum": ["STOCK", "OPTIONS", "FUTURES", "FOREX", "CRYPTO"]
+        },
+        "side": {
+          "type": "string",
+          "enum": ["LONG", "SHORT"]
+        },
+        "status": {
+          "type": "string",
+          "enum": ["CLOSED", "OPEN"]
+        },
+        "entryPrice": {
+          "type": "number",
+          "description": "Average execution entry price."
+        },
+        "exitPrice": {
+          "type": "number",
+          "description": "Optional average exit price when CLOSED."
+        },
+        "quantity": {
+          "type": "number",
+          "description": "Shares, contracts, lots, or coin units."
+        },
+        "contractMultiplier": {
+          "type": "number",
+          "description": "Point/contract multiplier (e.g., 1 for stocks, 100 for options, 50 for ES)."
+        },
+        "fees": {
+          "type": "number",
+          "description": "Commissions and fees."
+        },
+        "stopLossPrice": {
+          "type": "number",
+          "description": "Optional initial stop loss price for R-multiple calculation."
+        },
+        "takeProfitPrice": {
+          "type": "number",
+          "description": "Optional target price."
+        },
+        "entryTimeEpochMs": {
+          "type": "integer",
+          "description": "Entry execution timestamp in epoch milliseconds."
+        },
+        "exitTimeEpochMs": {
+          "type": "integer",
+          "description": "Optional exit timestamp in epoch milliseconds."
+        },
+        "playbookId": {
+          "type": "string",
+          "description": "Optional linked Playbook document ID."
+        },
+        "playbookAdherencePct": {
+          "type": "integer",
+          "description": "Rule compliance percentage 0..100."
+        },
+        "checkedRules": {
+          "type": "array",
+          "description": "Bounded list of playbook rules checked on this trade."
+        },
+        "mistakeTags": {
+          "type": "array",
+          "description": "Bounded list of behavioral mistake tags."
+        },
+        "setupTags": {
+          "type": "array",
+          "description": "Bounded list of setup tags."
+        },
+        "emotionBefore": {
+          "type": "string",
+          "description": "Pre-trade emotional state enum name."
+        },
+        "rating": {
+          "type": "integer",
+          "description": "Execution quality rating from 1 to 5."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Trade thesis and post-mortem review notes."
+        },
+        "chartImagePath": {
+          "type": "string",
+          "description": "Optional device-local screenshot path."
+        },
+        "demoRecord": {
+          "type": "boolean",
+          "description": "True if created by the opt-in demo history loader."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp written via FieldValue.serverTimestamp()."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp written via FieldValue.serverTimestamp()."
+        }
+      },
+      "required": [
+        "userId", "accountId", "symbol", "assetClass", "side", "status",
+        "entryPrice", "quantity", "contractMultiplier", "fees", "entryTimeEpochMs",
+        "playbookAdherencePct", "checkedRules", "mistakeTags", "setupTags",
+        "emotionBefore", "rating", "notes", "demoRecord", "createdAt", "updatedAt"
+      ]
+    },
+    "DailyJournal": {
+      "title": "DailyJournal",
+      "description": "A daily pre-market plan, post-market review, mood, and market regime entry.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Owner Firebase Auth UID."
+        },
+        "accountId": {
+          "type": "string",
+          "description": "Document ID of the associated TradingAccount."
+        },
+        "dateIso": {
+          "type": "string",
+          "description": "ISO date YYYY-MM-DD."
+        },
+        "preMarketPlan": {
+          "type": "string",
+          "description": "Pre-market game plan and key price levels."
+        },
+        "postMarketReview": {
+          "type": "string",
+          "description": "End-of-day execution review."
+        },
+        "lessonsLearned": {
+          "type": "string",
+          "description": "Actionable takeaways for the next session."
+        },
+        "mood": {
+          "type": "string",
+          "description": "Daily session mood enum name."
+        },
+        "marketRegime": {
+          "type": "string",
+          "description": "Observed market regime enum name."
+        },
+        "followedPlan": {
+          "type": "boolean",
+          "description": "Whether the trader respected risk and strategy rules."
+        },
+        "demoRecord": {
+          "type": "boolean",
+          "description": "True if created by the opt-in demo history loader."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp written via FieldValue.serverTimestamp()."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp written via FieldValue.serverTimestamp()."
+        }
+      },
+      "required": [
+        "userId", "accountId", "dateIso", "preMarketPlan", "postMarketReview",
+        "lessonsLearned", "mood", "marketRegime", "followedPlan", "demoRecord",
+        "createdAt", "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/accounts/{accountId}": {
+      "schema": { "$ref": "#/entities/TradingAccount" },
+      "description": "Private trading accounts owned by userId."
+    },
+    "/users/{userId}/playbooks/{playbookId}": {
+      "schema": { "$ref": "#/entities/Playbook" },
+      "description": "Private strategy playbooks owned by userId."
+    },
+    "/users/{userId}/trades/{tradeId}": {
+      "schema": { "$ref": "#/entities/Trade" },
+      "description": "Private historical trade executions owned by userId."
+    },
+    "/users/{userId}/journals/{journalId}": {
+      "schema": { "$ref": "#/entities/DailyJournal" },
+      "description": "Private daily session journal reviews owned by userId."
+    }
+  }
+}
